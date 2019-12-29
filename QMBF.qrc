@@ -1,0 +1,22 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+	<file>images/fileopen.png</file>
+	<file>images/filenew.png</file>
+	<file>images/filesave.png</file>
+	<file>images/filesaveas.png</file>
+	<file>images/exit.png</file>
+	<file>images/plotdata.png</file>
+	<file>images/plot_start.png</file>
+	<file>images/chisqr.png</file>
+	<file>images/eff_mass.png</file>
+	<file>images/qmbf.png</file>
+	<file>images/qmbf_48x48.png</file>
+        <file>images/kget.png</file>
+	<file>images/sf.png</file>
+	<file>images/pf.png</file>
+	<file>images/ps.png</file>
+  <file>images/mf.png</file>
+	<file>images/reload.png</file>
+	<file>images/text_block.png</file>
+</qresource>
+</RCC> 
