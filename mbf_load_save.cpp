@@ -224,6 +224,15 @@ void MainWindow::loadFile(const QString &fileName)
     }
   }
 
+  if(m.exists("rescalevalue"))
+  {
+    double value=m.get_double("rescalevalue");
+    if(value!=empty_double)
+    {
+      fitsetWidget->set_rescale_value(value);
+    }
+  }
+
   if(m.exists("inversionmethod"))
   {
     fitsetWidget->set_inversion_method(static_cast<inversion_method>(m.get_int("inversionmethod")));
@@ -723,6 +732,7 @@ bool MainWindow::saveFile(const QString &fileName)
   m.set_double("svdratio", fitsetWidget->get_svd_ratio());
   m.set_double("svdvalue", fitsetWidget->get_svd_value());
   m.set_int("svdcut", fitsetWidget->get_svd());
+  m.set_double("rescalevalue", fitsetWidget->get_rescale_value());
 
   m.set_bool("bootstrapnormalization", fitsetWidget->get_bootstrap_normalization());
 

@@ -564,7 +564,7 @@ void MainWindow::create_Widgets_Dialogs()
   tabWidget -> addTab(chisqrextraWidget, tr("Additional term in chi^2"));
 
   fitsetWidget=new FitSettingsWidget(start_bayes, start_num_diff, start_second_deriv_minimization, start_second_deriv_covariance, start_num_diff_step, start_use_bse, start_restrict_data, start_start_data, start_stop_data, start_startlambda, start_lambdafac,
-                                     start_tolerance, start_svd, start_svd_ratio, start_svd_value, start_steps, start_bin, start_bssamples);
+                                     start_tolerance, start_svd, start_svd_ratio, start_svd_value, start_rescale_value, start_steps, start_bin, start_bssamples);
   connect(fitsetWidget, SIGNAL(modified()), this, SLOT(modified()));
   connect(fitsetWidget, SIGNAL(bayesianmodified(int)), this, SLOT(bayesian_modified(int)));
   connect(fitsetWidget, SIGNAL(bin_modified(int)), this, SLOT(bin_modified()));
@@ -2187,6 +2187,18 @@ bool MainWindow::prepare_fit()
     _fitter->set_svd_cut_absolute(fitsetWidget->get_svd_value());
   }
 
+  if(inv_method==off_diagonal_rescale)
+  {
+    double rescale_factor=fitsetWidget->get_rescale_value();
+    if(rescale_factor==empty_double)
+    {
+      QMessageBox::warning(this, tr("QMBF"),
+                                 tr("Error: rescale value missing"));
+      return false;
+    }
+    _fitter->set_off_diagonal_rescale_factor(fitsetWidget->get_rescale_value());
+  }
+
   vector< double > constants(constsWidget->get_n_constants(), 0.0);
   for(int c=0; c<constsWidget->get_n_constants(); ++c)
   {
@@ -3335,6 +3347,10 @@ void MainWindow::show_report()
     case absolute_cut:
       sst << "SVD with EV value cut" << endl;
       sst << "SVD EV value cut: " << fitsetWidget->get_svd_value() << endl;
+      break;
+    case off_diagonal_rescale:
+      sst << "Rescale off-diagonal elements" << endl;
+      sst << "Rescale factor: " << fitsetWidget->get_rescale_value() << endl;
       break;
     default:
       break;

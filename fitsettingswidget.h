@@ -18,7 +18,7 @@ class FitSettingsWidget: public QWidget
 
   public:
     FitSettingsWidget(bool bayes, bool num_diff, bool second_deriv_minimization, bool second_deriv_covariance, double num_diff_step, bool use_bse, bool restrict_data, int startdata, int stopdata, double startlambda, double lambdafac, double tolerance,
-                      int svd, double svd_ratio, double svd_value, int steps, int bin, int bssamples, QWidget* parent=0);
+                      int svd, double svd_ratio, double svd_value, double rescale_value, int steps, int bin, int bssamples, QWidget* parent=0);
 
     void set_bayes(bool);
     bool get_bayes();
@@ -73,6 +73,9 @@ class FitSettingsWidget: public QWidget
 
     void set_svd_value(double);
     double get_svd_value();
+
+    void set_rescale_value(double);
+    double get_rescale_value();
 
     void set_steps(int);
     int get_steps();
@@ -169,6 +172,9 @@ class FitSettingsWidget: public QWidget
     QLineEdit* svdValueEd;
     QLabel* svdValueLb;
 
+    QLineEdit* rescaleValueEd;
+    QLabel* rescaleValueLb;
+
     QLineEdit* stepsEd;
     QLabel* stepsLb;
 
@@ -196,6 +202,7 @@ class FitSettingsWidget: public QWidget
     int svd0;
     double svd_ratio0;
     double svd_value0;
+    double rescale_value0;
     int steps0;
     int bin0;
     int bssamples0;

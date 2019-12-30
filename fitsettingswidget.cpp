@@ -1,7 +1,7 @@
 #include "fitsettingswidget.h"
 
 FitSettingsWidget::FitSettingsWidget(bool bayes, bool num_diff, bool second_deriv_minimization, bool second_deriv_covariance, double num_diff_step, bool use_bse, bool restrict_data, int startdata, int stopdata, double startlambda, double lambdafac, double tolerance,
-                      int svd, double svd_ratio, double svd_value, int steps, int bin, int bssamples, QWidget* parent)
+                      int svd, double svd_ratio, double svd_value, double rescale_value, int steps, int bin, int bssamples, QWidget* parent)
   : QWidget(parent)
 {
   start_bayes=bayes;
@@ -19,6 +19,7 @@ FitSettingsWidget::FitSettingsWidget(bool bayes, bool num_diff, bool second_deri
   svd0=svd;
   svd_ratio0=svd_ratio;
   svd_value0=svd_value;
+  rescale_value0=rescale_value;
   steps0=steps;
   bin0=bin;
   bssamples0=bssamples;
@@ -191,6 +192,9 @@ void FitSettingsWidget::set_inversion_method(inversion_method method)
     case diagonal:
       index=4;
       break;
+    case off_diagonal_rescale:
+      index=5;
+      break;
     default:
       break;
   }
@@ -218,6 +222,9 @@ inversion_method FitSettingsWidget::get_inversion_method()
       break;
     case 4:
       result=diagonal;
+      break;
+    case 5:
+      result=off_diagonal_rescale;
       break;
     default:
       break;
@@ -276,6 +283,16 @@ void FitSettingsWidget::set_svd_value(double value)
 double FitSettingsWidget::get_svd_value()
 {
   return QString_to_double(svdValueEd->text());
+}
+
+void FitSettingsWidget::set_rescale_value(double value)
+{
+  rescaleValueEd->setText(double_to_QString(value));
+}
+
+double FitSettingsWidget::get_rescale_value()
+{
+  return QString_to_double(rescaleValueEd->text());
 }
 
 void FitSettingsWidget::set_steps(int steps)
@@ -385,6 +402,7 @@ void FitSettingsWidget::reset()
   svdEd->setText(int_to_QString(svd0));
   svdRatioEd->setText(double_to_QString(svd_ratio0));
   svdValueEd->setText(double_to_QString(svd_value0));
+  rescaleValueEd->setText(double_to_QString(rescale_value0));
   stepsEd->setText(double_to_QString(steps0));
   binningSB->setValue(bin0);
   bssamplesEd->setText(double_to_QString(bssamples0));
@@ -500,6 +518,8 @@ void FitSettingsWidget::inv_method_modified_slot(int newindex)
   svdRatioLb->setEnabled(false);
   svdValueEd->setEnabled(false);
   svdValueLb->setEnabled(false);
+  rescaleValueEd->setEnabled(false);
+  rescaleValueLb->setEnabled(false);
   if(newindex==1)
   {
     svdEd->setEnabled(true);
@@ -514,6 +534,11 @@ void FitSettingsWidget::inv_method_modified_slot(int newindex)
   {
     svdValueEd->setEnabled(true);
     svdValueLb->setEnabled(true);
+  }
+  if(newindex==5)
+  {
+    rescaleValueEd->setEnabled(true);
+    rescaleValueLb->setEnabled(true);
   }
   emit svd_modified();
 }
@@ -666,6 +691,7 @@ void FitSettingsWidget::createGadgets()
   invMethodCb->addItem("SVD with EV ratio cut");
   invMethodCb->addItem("SVD with EV value cut");
   invMethodCb->addItem("Diagonal only (uncorrelated fit)");
+  invMethodCb->addItem("Rescale off-diagonal elements");
   connect(invMethodCb, SIGNAL(currentIndexChanged(int)), this, SLOT(modified_slot()));
   connect(invMethodCb, SIGNAL(currentIndexChanged(int)), this, SLOT(inv_method_modified_slot(int)));
 
@@ -694,6 +720,12 @@ void FitSettingsWidget::createGadgets()
   svdValueLb=new QLabel("SVD EV value cut:");
   connect(svdValueEd, SIGNAL(textChanged(const QString&)), this, SLOT(modified_slot()));
   connect(svdValueEd, SIGNAL(textChanged(const QString&)), this, SLOT(svd_modified_slot()));
+
+  rescaleValueEd=new QLineEdit();
+  rescaleValueEd->setValidator(new QDoubleValidator(1E-99, 1E99, 15, rescaleValueEd));
+  rescaleValueLb=new QLabel("Off-diagonal rescale factor:");
+  connect(rescaleValueEd, SIGNAL(textChanged(const QString&)), this, SLOT(modified_slot()));
+  connect(rescaleValueEd, SIGNAL(textChanged(const QString&)), this, SLOT(svd_modified_slot()));
 
   stepsEd=new QLineEdit();
   stepsEd->setValidator(new QIntValidator(1, 2000000000, stepsEd));
@@ -774,16 +806,19 @@ void FitSettingsWidget::createGadgets()
   layout->addWidget(svdValueLb, 13, 0);
   layout->addWidget(svdValueEd, 13, 1);
 
-  layout->addWidget(stepsLb, 14, 0);
-  layout->addWidget(stepsEd, 14, 1);
+  layout->addWidget(rescaleValueLb, 14, 0);
+  layout->addWidget(rescaleValueEd, 14, 1);
 
-  layout->addWidget(binningLb, 15, 0);
-  layout->addWidget(binningSB, 15, 1);
+  layout->addWidget(stepsLb, 15, 0);
+  layout->addWidget(stepsEd, 15, 1);
 
-  layout->addWidget(bssamplesLb, 16, 0);
-  layout->addWidget(bssamplesEd, 16, 1);
+  layout->addWidget(binningLb, 16, 0);
+  layout->addWidget(binningSB, 16, 1);
 
-  layout->addWidget(use_bse_cb, 17, 0);
+  layout->addWidget(bssamplesLb, 17, 0);
+  layout->addWidget(bssamplesEd, 17, 1);
+
+  layout->addWidget(use_bse_cb, 18, 0);
 
   hlayout2=new QHBoxLayout();
 
@@ -792,7 +827,7 @@ void FitSettingsWidget::createGadgets()
   hlayout2->addWidget(bootfilebutton);
   hlayout2->addWidget(newbootfilebutton);
 
-  layout->addLayout(hlayout2, 17, 1);
+  layout->addLayout(hlayout2, 18, 1);
 
   setLayout(layout);
 }
