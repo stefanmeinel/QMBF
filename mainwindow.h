@@ -158,7 +158,7 @@ using namespace std;
 class QAction;
 class QMenu;
 
-const double version=5.64;
+const double version=5.65;
 
 const int start_n_functions=1;
 const int max_n_functions=100;
@@ -308,7 +308,7 @@ class MainWindow : public QMainWindow
     void second_deriv_covariance_modified(int);
     void bin_modified();
     void svd_modified();
-    void bootstrap_normalization_modified();
+    void cov_normalization_modified();
     void n_functions_modified(int);
     void n_parameters_modified(int);
     void n_constants_modified();

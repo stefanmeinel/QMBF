@@ -49,8 +49,6 @@ class multifit_thread : public QThread
     void set_max_steps(int steps);
     int get_steps_needed();
 
-    void set_multifit_normalization(bool);
-
     void set_n_functions(int n);
     void set_n_parameters(int n);
     void set_parameter_names(const vector< string >& names);

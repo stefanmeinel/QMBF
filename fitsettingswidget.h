@@ -62,8 +62,8 @@ class FitSettingsWidget: public QWidget
     void set_inversion_method(inversion_method);
     inversion_method get_inversion_method();
 
-    void set_bootstrap_normalization(bool);
-    bool get_bootstrap_normalization();
+    void set_cov_normalization(cov_normalization);
+    cov_normalization get_cov_normalization();
 
     void set_svd(int);
     int get_svd();
@@ -96,7 +96,7 @@ class FitSettingsWidget: public QWidget
     void bayesianmodified(int newState);
     void bin_modified(int newsize);
     void svd_modified();
-    void bootstrap_normalization_modified();
+    void cov_normalization_modified();
     void datarange_modified();
     void numdiffmodified(int newState);
     void secondderivminimizationmodified(int newState);
@@ -111,7 +111,7 @@ class FitSettingsWidget: public QWidget
     void bin_modified_slot(int newsize);
     void svd_modified_slot();
     void inv_method_modified_slot(int newindex);
-    void bootstrap_normalization_modified_slot(int newindex);
+    void cov_normalization_modified_slot(int newindex);
     void select_bootfile();
     void new_bootfile();
     void numdiffmodified_slot(int newState);
@@ -160,8 +160,8 @@ class FitSettingsWidget: public QWidget
     QLabel* invMethodLb;
     QComboBox* invMethodCb;
 
-    QLabel* bootstrapNormalizationLb;
-    QComboBox* bootstrapNormalizationCb;
+    QLabel* covNormalizationLb;
+    QComboBox* covNormalizationCb;
 
     QLineEdit* svdEd;
     QLabel* svdLb;

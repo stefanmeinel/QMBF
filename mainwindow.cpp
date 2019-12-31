@@ -569,7 +569,7 @@ void MainWindow::create_Widgets_Dialogs()
   connect(fitsetWidget, SIGNAL(bayesianmodified(int)), this, SLOT(bayesian_modified(int)));
   connect(fitsetWidget, SIGNAL(bin_modified(int)), this, SLOT(bin_modified()));
   connect(fitsetWidget, SIGNAL(svd_modified()), this, SLOT(svd_modified()));
-  connect(fitsetWidget, SIGNAL(bootstrap_normalization_modified()), this, SLOT(bootstrap_normalization_modified()));
+  connect(fitsetWidget, SIGNAL(cov_normalization_modified()), this, SLOT(cov_normalization_modified()));
   connect(fitsetWidget, SIGNAL(datarange_modified()), this, SLOT(bin_modified()));
   connect(fitsetWidget, SIGNAL(numdiffmodified(int)), this, SLOT(num_diff_modified(int)));
   connect(fitsetWidget, SIGNAL(secondderivminimizationmodified(int)), this, SLOT(second_deriv_minimization_modified(int)));
@@ -1982,7 +1982,7 @@ void MainWindow::svd_modified()
   need_to_fit=true;
 }
 
-void MainWindow::bootstrap_normalization_modified()
+void MainWindow::cov_normalization_modified()
 {
   need_to_set_fit_data=true;
   need_to_fit=true;
@@ -2146,7 +2146,7 @@ bool MainWindow::prepare_fit()
   }
   _fitter->set_tolerance(tolerance);
 
-  _fitter->set_bootstrap_normalization(fitsetWidget->get_bootstrap_normalization());
+  _fitter->set_cov_normalization(fitsetWidget->get_cov_normalization());
 
   inversion_method inv_method=fitsetWidget->get_inversion_method();
   _fitter->set_inversion_method(inv_method);
@@ -2539,7 +2539,7 @@ void MainWindow::bootstrap()
   bootstrapdialog -> set_bssamples(bssamples);
   bootstrapthread -> set_bssamples(bssamples);
 
-  bootstrapthread -> set_bootstrap_normalization(fitsetWidget -> get_bootstrap_normalization());
+  bootstrapthread -> set_cov_normalization(fitsetWidget -> get_cov_normalization());
 
   stringstream message;
   message << "Bootstrap started" << endl;
@@ -2630,23 +2630,23 @@ void MainWindow::bootstrap_finished()
     return;
   }
 
-  double normalization=1.0;
-  if(fitsetWidget->get_bootstrap_normalization())
-  {
-    normalization=sqrt(double(fit_data.size()));
-  }
-
-  if(fitsetWidget -> get_bootstrap_normalization())
+  if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
   {
     stringstream message;
-    message << "Bootstrap warning: data correlation matrix normalization set to 1/(N-1). Rescaled calculated bootstrap widths by sqrt(N). Maybe you should use multifit instad of bootstrap." << endl;
+    message << "Bootstrap warning: data correlation matrix normalization set to 1/(N-1). Bootstrap widths will not represent actual error and need to be rescaled. Maybe you should use multifit instad of bootstrap." << endl;
+    mainWidget->print(message.str());
+  }
+  if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
+  {
+    stringstream message;
+    message << "Bootstrap warning: data correlation matrix normalization set to (N-1)/N. Bootstrap widths will not represent actual error and need to be rescaled. Maybe you should use multifit instad of bootstrap." << endl;
     mainWidget->print(message.str());
   }
 
 
   for(int p=0; p<parderWidget -> get_n_parameters(); ++p)
   {
-    mainWidget->set_BS_sigma(p, normalization*(bootstrapthread -> get_bs_sigma(p)));
+    mainWidget->set_BS_sigma(p, bootstrapthread -> get_bs_sigma(p));
   }
 }
 
@@ -3317,13 +3317,17 @@ void MainWindow::show_report()
   sst << "Delta(chi^2) tolerance       = " << fitsetWidget->get_tolerance() << endl;
 
   sst << "Normalization of correlation matrix: ";
-  if(fitsetWidget->get_bootstrap_normalization())
+  if(fitsetWidget->get_cov_normalization()==standard_normalization)
+  {
+    sst << "1/(N*(N-1))" << endl;
+  }
+  else if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
   {
     sst << "1/(N-1)" << endl;
   }
-  else
+  else if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
   {
-    sst << "1/(N*(N-1))" << endl;
+    sst << "(N-1)/N" << endl;
   }
 
 
@@ -3865,13 +3869,17 @@ bool MainWindow::set_fit_data()
   stringstream message;
 
   message << "Normalization of correlation matrix: ";
-  if(fitsetWidget->get_bootstrap_normalization())
+  if(fitsetWidget->get_cov_normalization()==standard_normalization)
+  {
+    message << "1/(N*(N-1))" << endl;
+  }
+  else if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
   {
     message << "1/(N-1)" << endl;
   }
-  else
+  else if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
   {
-    message << "1/(N*(N-1))" << endl;
+    message << "(N-1)/N" << endl;
   }
 
   message << "(Pseudo-)Inversion method for data correlation matrix: ";

@@ -10,7 +10,7 @@ bootstrap_thread::bootstrap_thread(QObject* parent)
   usebse = true;
   stop = false;
   n_parameters_dof=0;
-  bootstrap_normalization=false;
+  cn=standard_normalization;
 }
 
 bootstrap_thread::~bootstrap_thread()
@@ -18,9 +18,9 @@ bootstrap_thread::~bootstrap_thread()
 }
 
 
-void bootstrap_thread::set_bootstrap_normalization(bool bsn)
+void bootstrap_thread::set_cov_normalization(cov_normalization cov_norm)
 {
-  bootstrap_normalization=bsn;
+  cn=cov_norm;
 }
 
 
@@ -355,12 +355,6 @@ void bootstrap_thread::run()
     boot_av[p]/=bssamples;
   }
 
-  double normalization=1.0;
-  if(bootstrap_normalization)
-  {
-    normalization=sqrt(double(fit_data.size()));
-  }
-
   for(int p=0; p<n_parameters; ++p)
   {
     vector< double > range_temp(bssamples, 0.0);
@@ -373,7 +367,7 @@ void bootstrap_thread::run()
     boot_sigma[p]=(range_temp[static_cast<int>(0.841345*bssamples)]-range_temp[static_cast<int>(0.158655*bssamples)])/2.0;
 
     stringstream message1;
-    message1 << parameter_names[p] << ":   average = " << boot_av[p] << "   sigma = " << normalization*boot_sigma[p] << endl << "Output file = " << all_filenames[p];
+    message1 << parameter_names[p] << ":   average = " << boot_av[p] << "   sigma = " << boot_sigma[p] << endl << "Output file = " << all_filenames[p];
     emit message_signal((message1.str()).c_str());
   }
 

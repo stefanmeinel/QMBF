@@ -145,28 +145,36 @@ double FitSettingsWidget::get_tolerance()
 }
 
 
-void FitSettingsWidget::set_bootstrap_normalization(bool bootstrap_normalization)
+void FitSettingsWidget::set_cov_normalization(cov_normalization cn)
 {
-  if(bootstrap_normalization)
+  if(cn==standard_normalization)
   {
-    bootstrapNormalizationCb->setCurrentIndex(1);
+    covNormalizationCb->setCurrentIndex(0);
   }
-  else
+  else if(cn==bootstrap_normalization)
   {
-    bootstrapNormalizationCb->setCurrentIndex(0);
+    covNormalizationCb->setCurrentIndex(1);
+  }
+  else if(cn==jackknife_normalization)
+  {
+    covNormalizationCb->setCurrentIndex(2);
   }
 }
 
 
-bool FitSettingsWidget::get_bootstrap_normalization()
+cov_normalization FitSettingsWidget::get_cov_normalization()
 {
-  if(bootstrapNormalizationCb->currentIndex()==1)
+  if(covNormalizationCb->currentIndex()==0)
   {
-    return true;
+    return standard_normalization;
+  }
+  else if(covNormalizationCb->currentIndex()==1)
+  {
+    return bootstrap_normalization;
   }
   else
   {
-    return false;
+    return jackknife_normalization;
   }
 }
 
@@ -397,8 +405,8 @@ void FitSettingsWidget::reset()
   toleranceEd->setText(double_to_QString(tolerance0));
   invMethodCb->setCurrentIndex(0);
   inv_method_modified_slot(0);
-  bootstrapNormalizationCb->setCurrentIndex(0);
-  bootstrap_normalization_modified_slot(0);
+  covNormalizationCb->setCurrentIndex(0);
+  cov_normalization_modified_slot(0);
   svdEd->setText(int_to_QString(svd0));
   svdRatioEd->setText(double_to_QString(svd_ratio0));
   svdValueEd->setText(double_to_QString(svd_value0));
@@ -544,9 +552,9 @@ void FitSettingsWidget::inv_method_modified_slot(int newindex)
 }
 
 
-void FitSettingsWidget::bootstrap_normalization_modified_slot(int newindex)
+void FitSettingsWidget::cov_normalization_modified_slot(int newindex)
 {
-  if(newindex==1)
+  if( (newindex==1) || (newindex==2) )
   {
     binningSB->setValue(1);
     binningSB->setEnabled(false);
@@ -555,7 +563,7 @@ void FitSettingsWidget::bootstrap_normalization_modified_slot(int newindex)
   {
     binningSB->setEnabled(true);
   }
-  emit bootstrap_normalization_modified();
+  emit cov_normalization_modified();
 }
 
 
@@ -695,12 +703,13 @@ void FitSettingsWidget::createGadgets()
   connect(invMethodCb, SIGNAL(currentIndexChanged(int)), this, SLOT(modified_slot()));
   connect(invMethodCb, SIGNAL(currentIndexChanged(int)), this, SLOT(inv_method_modified_slot(int)));
 
-  bootstrapNormalizationLb=new QLabel("Normalization of correlation matrix:");
-  bootstrapNormalizationCb=new QComboBox;
-  bootstrapNormalizationCb->addItem("1/(N*(N-1))");
-  bootstrapNormalizationCb->addItem("1/(N-1)");
-  connect(bootstrapNormalizationCb, SIGNAL(currentIndexChanged(int)), this, SLOT(modified_slot()));
-  connect(bootstrapNormalizationCb, SIGNAL(currentIndexChanged(int)), this, SLOT(bootstrap_normalization_modified_slot(int)));
+  covNormalizationLb=new QLabel("Normalization of correlation matrix:");
+  covNormalizationCb=new QComboBox;
+  covNormalizationCb->addItem("1/(N*(N-1))");
+  covNormalizationCb->addItem("1/(N-1)");
+  covNormalizationCb->addItem("(N-1)/N");
+  connect(covNormalizationCb, SIGNAL(currentIndexChanged(int)), this, SLOT(modified_slot()));
+  connect(covNormalizationCb, SIGNAL(currentIndexChanged(int)), this, SLOT(cov_normalization_modified_slot(int)));
 
 
   svdEd=new QLineEdit();
@@ -791,8 +800,8 @@ void FitSettingsWidget::createGadgets()
   layout->addWidget(toleranceLb, 8, 0);
   layout->addWidget(toleranceEd, 8, 1);
 
-  layout->addWidget(bootstrapNormalizationLb, 9, 0);
-  layout->addWidget(bootstrapNormalizationCb, 9, 1);
+  layout->addWidget(covNormalizationLb, 9, 0);
+  layout->addWidget(covNormalizationCb, 9, 1);
 
   layout->addWidget(invMethodLb, 10, 0);
   layout->addWidget(invMethodCb, 10, 1);

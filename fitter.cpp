@@ -25,7 +25,7 @@ fitter::fitter(abstract_model* fit_model,
   lambda_fac=default_lambda_fac;
   tolerance=default_tolerance;
 
-  bootstrap_normalization=default_bootstrap_normalization;
+  cn=default_cov_normalization;
 
   start_vals.resize(n_parameters, 0.0);
 
@@ -123,14 +123,18 @@ void fitter::set_data(const vector< vector< double > >& arguments, const vector<
 
 // calculate data correlation matrix corr
 
-  double normalization;
-  if(bootstrap_normalization)
+  double normalization=1.0;
+  if(cn==standard_normalization)
+  {
+    normalization=double(n_data_sets)*double(n_data_sets-1);
+  }
+  else if(cn==bootstrap_normalization)
   {
     normalization=double(n_data_sets-1);
   }
-  else
+  else if(cn==jackknife_normalization)
   {
-    normalization=double(n_data_sets)*double(n_data_sets-1);
+    normalization=double(n_data_sets)/double(n_data_sets-1);
   }
 
   gsl_matrix* corr=gsl_matrix_alloc(n_data_points*n_functions, n_data_points*n_functions);
@@ -367,9 +371,9 @@ void fitter::set_tolerance(double dchisqr_tolerance)
 }
 
 
-void fitter::set_bootstrap_normalization(bool value)
+void fitter::set_cov_normalization(cov_normalization cov_norm)
 {
-  bootstrap_normalization=value;
+  cn=cov_norm;
 }
 
 

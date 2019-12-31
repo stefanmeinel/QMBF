@@ -267,14 +267,22 @@ void MainWindow::loadFile(const QString &fileName)
       fitsetWidget->set_bin(binsize);
     }
   }
-  if(m.exists("bootstrapnormalization"))
+  if(m.exists("bootstrapnormalization")) // for backward compatibility
   {
     bool bsn=m.get_bool("bootstrapnormalization");
-    fitsetWidget->set_bootstrap_normalization(bsn);
     if(bsn)
     {
+      fitsetWidget->set_cov_normalization(bootstrap_normalization);
       fitsetWidget->set_bin(1);
     }
+    else
+    {
+      fitsetWidget->set_cov_normalization(standard_normalization);
+    }
+  }
+  if(m.exists("covnormalization"))
+  {
+    fitsetWidget->set_cov_normalization(static_cast<cov_normalization>(m.get_int("covnormalization")));
   }
 
   if(m.exists("bssamples"))
@@ -734,7 +742,8 @@ bool MainWindow::saveFile(const QString &fileName)
   m.set_int("svdcut", fitsetWidget->get_svd());
   m.set_double("rescalevalue", fitsetWidget->get_rescale_value());
 
-  m.set_bool("bootstrapnormalization", fitsetWidget->get_bootstrap_normalization());
+//  m.set_bool("bootstrapnormalization", fitsetWidget->get_bootstrap_normalization());
+  m.set_int("covnormalization", fitsetWidget->get_cov_normalization());
 
   m.set_int("maxsteps", fitsetWidget->get_steps());
   m.set_int("binsize", fitsetWidget->get_bin());

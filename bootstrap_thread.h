@@ -47,7 +47,7 @@ class bootstrap_thread : public QThread
     void set_max_steps(int steps);
     int get_steps_needed();
 
-    void set_bootstrap_normalization(bool);
+    void set_cov_normalization(cov_normalization);
 
     void set_n_functions(int n);
     void set_n_parameters(int n);
@@ -93,7 +93,7 @@ class bootstrap_thread : public QThread
 
     string bse_file;
 
-    bool bootstrap_normalization;
+    cov_normalization cn;
 
     int steps_needed;
     int max_steps;

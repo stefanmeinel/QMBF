@@ -157,14 +157,18 @@ void MainWindow::plot_data()
     }
   }
   vector< vector< double > > sigma(n_data_points, zero_temp);
-  double normalization;
-  if(fitsetWidget->get_bootstrap_normalization())
+  double normalization=1.0;
+  if(fitsetWidget->get_cov_normalization()==standard_normalization)
+  {
+    normalization=double(n_data_sets)*double(n_data_sets-1);
+  }
+  else if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
   {
     normalization=double(n_data_sets-1);
   }
-  else
+  else if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
   {
-    normalization=double(n_data_sets)*double(n_data_sets-1);
+    normalization=double(n_data_sets)/double(n_data_sets-1);
   }
   for(int m=0; m<n_data_points; ++m)
   {
@@ -401,14 +405,18 @@ void MainWindow::plot_all()
     }
   }
   vector< vector< double > > sigma(n_data_points, zero_temp);
-  double normalization;
-  if(fitsetWidget->get_bootstrap_normalization())
+  double normalization=1.0;
+  if(fitsetWidget->get_cov_normalization()==standard_normalization)
+  {
+    normalization=double(n_data_sets)*double(n_data_sets-1);
+  }
+  else if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
   {
     normalization=double(n_data_sets-1);
   }
-  else
+  else if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
   {
-    normalization=double(n_data_sets)*double(n_data_sets-1);
+    normalization=double(n_data_sets)/double(n_data_sets-1);
   }
   for(int m=0; m<n_data_points; ++m)
   {
@@ -737,14 +745,18 @@ void MainWindow::plot_start()
     }
   }
   vector< vector< double > > sigma(n_data_points, zero_temp);
-  double normalization;
-  if(fitsetWidget->get_bootstrap_normalization())
+  double normalization=1.0;
+  if(fitsetWidget->get_cov_normalization()==standard_normalization)
+  {
+    normalization=double(n_data_sets)*double(n_data_sets-1);
+  }
+  else if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
   {
     normalization=double(n_data_sets-1);
   }
-  else
+  else if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
   {
-    normalization=double(n_data_sets)*double(n_data_sets-1);
+    normalization=double(n_data_sets)/double(n_data_sets-1);
   }
   for(int m=0; m<n_data_points; ++m)
   {
@@ -1033,8 +1045,6 @@ void MainWindow::plot_eff_mass()
 
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
-
-
   vector< double > zero_temp(n_functions, 0.0);
   vector< vector< double > > corr_average(n_data_points, zero_temp);
 
@@ -1056,54 +1066,80 @@ void MainWindow::plot_eff_mass()
     }
   }
 
-
-  int bssamples=500;
-
-  gsl_rng_default_seed=0;
-  gsl_rng_env_setup();
-  const gsl_rng_type* Trng=gsl_rng_mt19937;
-  gsl_rng* rng=gsl_rng_alloc(Trng);
-
-  vector< int > bootconfig_temp(n_data_sets, 0);
-  vector< vector< int > > bootconfig(bssamples, bootconfig_temp);
-
-
-  for(int boot=0; boot<bssamples; ++boot)
-  {
-    for(unsigned int b=0; b<n_data_sets; ++b)
-    {
-      bootconfig[boot][b]=static_cast<int>(gsl_rng_uniform(rng)*n_data_sets);
-    }
-  }
-
-  gsl_rng_free(rng);
-
-
+  
   vector< double > eff_mass_tmp_1(n_functions, 0.0);
   vector< vector< double > > eff_mass_tmp_2(n_data_points, eff_mass_tmp_1);
-  vector< vector< vector< double > > > eff_mass(bssamples, eff_mass_tmp_2);
-
   vector< vector< double > > eff_mass_average(n_data_points, eff_mass_tmp_1);
   vector< vector< double > > eff_mass_sigma(n_data_points, eff_mass_tmp_1);
-
-
-
-
-
-
-
-  for(int boot=0; boot<bssamples; ++boot)
+  
+   // data not already resampled? Use bootstrap to compute effective mass error bars.
+  if(fitsetWidget->get_cov_normalization()==standard_normalization)
   {
-    vector< double > zero_temp(n_functions, 0.0);
-    vector< vector< double > > average(n_data_points, zero_temp);
+    int bssamples=500;
 
-    for(int n=0; n<n_data_sets; ++n)
+    gsl_rng_default_seed=0;
+    gsl_rng_env_setup();
+    const gsl_rng_type* Trng=gsl_rng_mt19937;
+    gsl_rng* rng=gsl_rng_alloc(Trng);
+
+    vector< int > bootconfig_temp(n_data_sets, 0);
+    vector< vector< int > > bootconfig(bssamples, bootconfig_temp);
+
+
+    for(int boot=0; boot<bssamples; ++boot)
     {
-      for(int m=0; m<n_data_points; ++m)
+      for(unsigned int b=0; b<n_data_sets; ++b)
+      {
+        bootconfig[boot][b]=static_cast<int>(gsl_rng_uniform(rng)*n_data_sets);
+      }
+    }
+
+    gsl_rng_free(rng);
+
+
+    vector< vector< vector< double > > > eff_mass(bssamples, eff_mass_tmp_2);
+
+
+
+    for(int boot=0; boot<bssamples; ++boot)
+    {
+      vector< double > zero_temp(n_functions, 0.0);
+      vector< vector< double > > average(n_data_points, zero_temp);
+
+      for(int n=0; n<n_data_sets; ++n)
+      {
+        for(int m=0; m<n_data_points; ++m)
+        {
+          for(int f=0; f<n_functions; ++f)
+          {
+            average[m][f]+=plotting_data[bootconfig[boot][n]][m][f];
+          }
+        }
+      }
+
+      for(int m=0; m<n_data_points-1; ++m)
       {
         for(int f=0; f<n_functions; ++f)
         {
-          average[m][f]+=plotting_data[bootconfig[boot][n]][m][f];
+          if(average[m][f]/average[m+1][f]>0)
+          {
+            eff_mass[boot][m][f]=log(average[m][f]/average[m+1][f]);
+          }
+          else
+          {
+            eff_mass[boot][m][f]=0;
+          }
+        }
+      }
+    }
+
+    for(int boot=0; boot<bssamples; ++boot)
+    {
+      for(int m=0; m<n_data_points-1; ++m)
+      {
+        for(int f=0; f<n_functions; ++f)
+        {
+          eff_mass_average[m][f]+=eff_mass[boot][m][f];
         }
       }
     }
@@ -1112,57 +1148,90 @@ void MainWindow::plot_eff_mass()
     {
       for(int f=0; f<n_functions; ++f)
       {
-        if(average[m][f]/average[m+1][f]>0)
-        {
-          eff_mass[boot][m][f]=log(average[m][f]/average[m+1][f]);
-        }
-        else
-        {
-          eff_mass[boot][m][f]=0;
-        }
+        eff_mass_average[m][f]/=bssamples;
       }
     }
-  }
 
-  for(int boot=0; boot<bssamples; ++boot)
-  {
     for(int m=0; m<n_data_points-1; ++m)
     {
       for(int f=0; f<n_functions; ++f)
       {
-        eff_mass_average[m][f]+=eff_mass[boot][m][f];
+        vector< double > range_temp(bssamples, 0.0);
+        for(int boot=0; boot<bssamples; ++boot)
+        {
+          range_temp[boot]= eff_mass[boot][m][f];
+        }
+        stable_sort(range_temp.begin(), range_temp.end());
+        eff_mass_sigma[m][f]=(range_temp[static_cast<int>(0.841345*bssamples)]-range_temp[static_cast<int>(0.158655*bssamples)])/2.0;
       }
     }
   }
-
-  for(int m=0; m<n_data_points-1; ++m)
+  else // data already resampled using bootstrap or jackknife. compute sample by sample
   {
-    for(int f=0; f<n_functions; ++f)
+    vector< vector< vector< double > > > eff_mass(n_data_sets, eff_mass_tmp_2);
+    for(int n=0; n<n_data_sets; ++n)
     {
-       eff_mass_average[m][f]/=bssamples;
-    }
-  }
-
-  double normalization=1.0;
-  if(fitsetWidget->get_bootstrap_normalization())
-  {
-    normalization=sqrt(n_data_sets);
-  }
-
-  for(int m=0; m<n_data_points-1; ++m)
-  {
-    for(int f=0; f<n_functions; ++f)
-    {
-      vector< double > range_temp(bssamples, 0.0);
-      for(int boot=0; boot<bssamples; ++boot)
+      for(int m=0; m<n_data_points-1; ++m)
       {
-        range_temp[boot]= eff_mass[boot][m][f];
+        for(int f=0; f<n_functions; ++f)
+        {
+          if(plotting_data[n][m][f]/plotting_data[n][m+1][f]>0)
+          {
+            eff_mass[n][m][f]=log(plotting_data[n][m][f]/plotting_data[n][m+1][f]);
+          }
+          else
+          {
+            eff_mass[n][m][f]=0;
+          }
+        }
       }
-      stable_sort(range_temp.begin(), range_temp.end());
-      eff_mass_sigma[m][f]=normalization*(range_temp[static_cast<int>(0.841345*bssamples)]-range_temp[static_cast<int>(0.158655*bssamples)])/2.0;
     }
-  }
 
+    for(int n=0; n<n_data_sets; ++n)
+    {
+      for(int m=0; m<n_data_points-1; ++m)
+      {
+        for(int f=0; f<n_functions; ++f)
+        {
+          eff_mass_average[m][f]+=eff_mass[n][m][f];
+        }
+      }
+    }
+    for(int m=0; m<n_data_points-1; ++m)
+    {
+      for(int f=0; f<n_functions; ++f)
+      {
+        eff_mass_average[m][f]/=n_data_sets;
+      }
+    }
+    for(int n=0; n<n_data_sets; ++n)
+    {
+      for(int m=0; m<n_data_points-1; ++m)
+      {
+        for(int f=0; f<n_functions; ++f)
+        {
+          eff_mass_sigma[m][f]+=(eff_mass[n][m][f]-eff_mass_average[m][f])*(eff_mass[n][m][f]-eff_mass_average[m][f]);
+        }
+      }
+    }
+    double normalization=1.0;
+    if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
+    {
+      normalization=double(n_data_sets-1);
+    }
+    else if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
+    {
+      normalization=double(n_data_sets)/double(n_data_sets-1);
+    }
+    for(int m=0; m<n_data_points; ++m)
+    {
+      for(int f=0; f<n_functions; ++f)
+      {
+        eff_mass_sigma[m][f]=sqrt(eff_mass_sigma[m][f]/normalization);
+      }
+    }
+    
+  }
   double plot_x_min;
   double plot_x_max;
   if(plot_set_dialog->data_range())
