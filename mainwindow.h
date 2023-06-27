@@ -158,7 +158,7 @@ using namespace std;
 class QAction;
 class QMenu;
 
-const double version=5.66;
+const double version=5.67;
 
 const int start_n_functions=1;
 const int max_n_functions=100;

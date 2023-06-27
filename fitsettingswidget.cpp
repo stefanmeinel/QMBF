@@ -692,7 +692,7 @@ void FitSettingsWidget::createGadgets()
   toleranceLb=new QLabel("Delta(chi^2) tolerance:");
   connect(toleranceEd, SIGNAL(textChanged(const QString&)), this, SLOT(modified_slot()));
 
-  invMethodLb=new QLabel("(Pseudo-)Inversion method for correlation matrix:");
+  invMethodLb=new QLabel("(Pseudo-)Inversion method for covariance matrix:");
   invMethodCb=new QComboBox;
   invMethodCb->addItem("LU decomposition");
   invMethodCb->addItem("SVD with fixed cut");
@@ -703,7 +703,7 @@ void FitSettingsWidget::createGadgets()
   connect(invMethodCb, SIGNAL(currentIndexChanged(int)), this, SLOT(modified_slot()));
   connect(invMethodCb, SIGNAL(currentIndexChanged(int)), this, SLOT(inv_method_modified_slot(int)));
 
-  covNormalizationLb=new QLabel("Normalization of correlation matrix:");
+  covNormalizationLb=new QLabel("Normalization of covariance matrix:");
   covNormalizationCb=new QComboBox;
   covNormalizationCb->addItem("1/(N*(N-1))");
   covNormalizationCb->addItem("1/(N-1)");

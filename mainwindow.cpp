@@ -2633,13 +2633,13 @@ void MainWindow::bootstrap_finished()
   if(fitsetWidget->get_cov_normalization()==bootstrap_normalization)
   {
     stringstream message;
-    message << "Bootstrap warning: data correlation matrix normalization set to 1/(N-1). Bootstrap widths will not represent actual error and need to be rescaled. Maybe you should use multifit instad of bootstrap." << endl;
+    message << "Bootstrap warning: data covariance matrix normalization set to 1/(N-1). Bootstrap widths will not represent actual error and need to be rescaled. Maybe you should use multifit instad of bootstrap." << endl;
     mainWidget->print(message.str());
   }
   if(fitsetWidget->get_cov_normalization()==jackknife_normalization)
   {
     stringstream message;
-    message << "Bootstrap warning: data correlation matrix normalization set to (N-1)/N. Bootstrap widths will not represent actual error and need to be rescaled. Maybe you should use multifit instad of bootstrap." << endl;
+    message << "Bootstrap warning: data covariance matrix normalization set to (N-1)/N. Bootstrap widths will not represent actual error and need to be rescaled. Maybe you should use multifit instad of bootstrap." << endl;
     mainWidget->print(message.str());
   }
 
@@ -3316,7 +3316,7 @@ void MainWindow::show_report()
   sst << "Lambda factor                = " << fitsetWidget->get_lambdafac() << endl;
   sst << "Delta(chi^2) tolerance       = " << fitsetWidget->get_tolerance() << endl;
 
-  sst << "Normalization of correlation matrix: ";
+  sst << "Normalization of covariance matrix: ";
   if(fitsetWidget->get_cov_normalization()==standard_normalization)
   {
     sst << "1/(N*(N-1))" << endl;
@@ -3331,7 +3331,7 @@ void MainWindow::show_report()
   }
 
 
-  sst << "(Pseudo-)Inversion method for correlation matrix: ";
+  sst << "(Pseudo-)Inversion method for covariance matrix: ";
   switch(fitsetWidget->get_inversion_method())
   {
     case diagonal:
@@ -3812,7 +3812,7 @@ bool MainWindow::set_fit_data()
   if(fit_n_data_sets/bin_size<5)
   {
     QMessageBox::warning(this, tr("QMBF"),
-                               tr("Error: Bin size too large"));
+                               tr("Error: fewer than 5 data samples (after binning)"));
     return false;
   }
 
@@ -3855,7 +3855,7 @@ bool MainWindow::set_fit_data()
     if( (dof-cut) > (fit_n_data_sets/bin_size) )
     {
       QMessageBox::warning(this, tr("QMBF"),
-                                  tr("Not enough data sets (after binning) to obtain (pseudo-)inverse of data correlation matrix. Reduce bin size or increase SVD cut."));
+                                  tr("Not enough data samples (after binning) to obtain (pseudo-)inverse of data covariance matrix. Reduce bin size or increase SVD cut."));
       return false;
     }
   }
@@ -3868,7 +3868,7 @@ bool MainWindow::set_fit_data()
 
   stringstream message;
 
-  message << "Normalization of correlation matrix: ";
+  message << "Normalization of covariance matrix: ";
   if(fitsetWidget->get_cov_normalization()==standard_normalization)
   {
     message << "1/(N*(N-1))" << endl;
@@ -3882,7 +3882,7 @@ bool MainWindow::set_fit_data()
     message << "(N-1)/N" << endl;
   }
 
-  message << "(Pseudo-)Inversion method for data correlation matrix: ";
+  message << "(Pseudo-)Inversion method for data covariance matrix: ";
   switch(fitsetWidget->get_inversion_method())
   {
     case LU_inversion:

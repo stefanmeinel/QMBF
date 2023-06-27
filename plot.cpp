@@ -22,10 +22,10 @@ bool MainWindow::set_plot_data()
       return false;
     }
 
-    if (fit_n_data_sets<10)
+    if (fit_n_data_sets<5)
     {
       QMessageBox::warning(this, tr("QMBF"),
-                   tr("Range of data sets too small"));
+                   tr("Error: fewer than 5 samples"));
       return false;
     }
   }
@@ -37,10 +37,10 @@ bool MainWindow::set_plot_data()
   }
 
   int bin_size=fitsetWidget->get_bin();
-  if(fit_n_data_sets/bin_size<10)
+  if(fit_n_data_sets/bin_size<5)
   {
     QMessageBox::warning(this, tr("QMBF"),
-                               tr("Error: Bin size too large"));
+                               tr("Error: fewer than 5 data samples (after binning)"));
     return false;
   }
   vector< double > plotting_data_temp_1(n_functions, 0.0);
@@ -1046,7 +1046,7 @@ void MainWindow::plot_eff_mass()
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
   vector< double > zero_temp(n_functions, 0.0);
-  vector< vector< double > > corr_average(n_data_points, zero_temp);
+  vector< vector< double > > datacov_average(n_data_points, zero_temp);
 
   for(int n=0; n<n_data_sets; ++n)
   {
@@ -1054,7 +1054,7 @@ void MainWindow::plot_eff_mass()
     {
       for(int f=0; f<n_functions; ++f)
       {
-        corr_average[m][f]+=plotting_data[n][m][f];
+        datacov_average[m][f]+=plotting_data[n][m][f];
       }
     }
   }
@@ -1062,7 +1062,7 @@ void MainWindow::plot_eff_mass()
   {
     for(int f=0; f<n_functions; ++f)
     {
-      corr_average[m][f]/=n_data_sets;
+      datacov_average[m][f]/=n_data_sets;
     }
   }
 
@@ -1300,9 +1300,9 @@ void MainWindow::plot_eff_mass()
     {
       if( (file_arguments[m][0]>=plot_x_min) && (file_arguments[m][0]<=plot_x_max) )
       {
-        if(corr_average[m][f]/corr_average[m+1][f]>0)
+        if(datacov_average[m][f]/datacov_average[m+1][f]>0)
         {
-          output << (file_arguments[m][0]+file_arguments[m+1][0])/2.0 << " " << log(corr_average[m][f]/corr_average[m+1][f]) << " " << eff_mass_sigma[m][f] << endl;
+          output << (file_arguments[m][0]+file_arguments[m+1][0])/2.0 << " " << log(datacov_average[m][f]/datacov_average[m+1][f]) << " " << eff_mass_sigma[m][f] << endl;
         }
       }
     }
